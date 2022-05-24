@@ -1,9 +1,7 @@
 extends Node
 
+var delta_acc = 0
 
 func _ready():
 	Network.init()
-
-
-func _process(delta):
-	pass
+	Database.init_db()

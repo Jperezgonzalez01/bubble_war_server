@@ -11,7 +11,7 @@ func create_new_game(lobby_id, lobby_players):
 
 func get_current_game_players(game_id):
 	#return transform_players_in_game(current_games[game_id])
-	return current_games[game_id]
+	return current_games.get(game_id, {})
 
 
 func transform_players_in_game(lobby):

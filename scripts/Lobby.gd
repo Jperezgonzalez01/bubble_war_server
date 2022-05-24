@@ -23,7 +23,16 @@ func get_player_lobby(player_id):
 	var current_player = players_dict[player_id]
 	var lobby_id = current_player.get_lobby_id()
 	if lobby_id != 0:
-		return [lobby_id, transform_players_in_lobby(lobbies_dict[lobby_id])]
+		return [lobby_id, get_lobby_players_username(lobbies_dict[lobby_id])]
+	else:
+		return [0, []]
+
+
+func get_raw_player_lobby(player_id):
+	var current_player = players_dict[player_id]
+	var lobby_id = current_player.get_lobby_id()
+	if lobby_id != 0:
+		return [lobby_id, get_lobby_players_id(lobby_id)]
 	else:
 		return [0, []]
 
@@ -87,14 +96,18 @@ func is_lobby_full(lobby_id) -> bool:
 
 func get_lobby_players_id(lobby_id):
 	var lobby = lobbies_dict[lobby_id]
-	return transform_players_in_lobby(lobby)
-
-
-func transform_players_in_lobby(lobby):
 	var players_to_send = []
 	for player in lobby:
-		players_to_send.append(player.id)
+		players_to_send.append(player.get_id())
 	return players_to_send
+
+
+func get_lobby_players_username(lobby):
+	var players_to_send = []
+	for player in lobby:
+		players_to_send.append(player.get_username())
+	return players_to_send
+
 
 func transform_lobbies_to_send(player_lobby_id):
 	var lobbies_to_send = []
@@ -102,3 +115,8 @@ func transform_lobbies_to_send(player_lobby_id):
 		if lobby_id != player_lobby_id:
 			lobbies_to_send.append(lobby_id)
 	return lobbies_to_send
+
+func player_logedin(player_id, username):
+	var current_player = players_dict.get(player_id)
+	if current_player != null:
+		current_player.set_username(username)

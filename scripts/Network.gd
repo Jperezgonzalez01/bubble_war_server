@@ -69,7 +69,7 @@ remote func s_leave_current_lobby():
 
 remote func s_create_new_coop_stage():
 	var current_player_id = get_tree().get_rpc_sender_id()
-	var lobby_array = Lobby.get_player_lobby(current_player_id)
+	var lobby_array = Lobby.get_raw_player_lobby(current_player_id)
 	var game_id = CoOpStage.create_new_game(lobby_array[0], lobby_array[1])
 	var initial_bubble_position = CoOpStage.get_random_bubble_location()
 	var initial_player_positions = CoOpStage.get_random_player_location(game_id)
@@ -86,13 +86,73 @@ remote func s_update_player_position_and_state(game_id, player_position, player_
 		if other_player_id != current_player_id:
 			rpc_id(other_player_id, "c_update_player_position_and_state", current_player_id, player_position, player_state)
 
-remote func s_player_emit_shoot(game_id):
+remote func s_player_emit_shoot(game_id, bullet_index, bullet_position):
 	var current_player_id = get_tree().get_rpc_sender_id()
 	var game_players = CoOpStage.get_current_game_players(game_id)
 	for other_player_id in game_players:
 		if other_player_id != current_player_id:
-			rpc_id(other_player_id, "c_player_emit_shoot", current_player_id)
+			rpc_id(other_player_id, "c_player_emit_shoot", current_player_id, bullet_index, bullet_position)
 
-func s_coop_game_finished(game_id):
+remote func s_destroy_bullet(game_id, bullet_index):
+	var current_player_id = get_tree().get_rpc_sender_id()
+	var game_players = CoOpStage.get_current_game_players(game_id)
+	for other_player_id in game_players:
+		if other_player_id != current_player_id:
+			rpc_id(other_player_id, "c_destroy_bullet", bullet_index)
+
+remote func s_destroy_bubble(game_id, bubble_index, bubble_position):
+	var current_player_id = get_tree().get_rpc_sender_id()
+	var game_players = CoOpStage.get_current_game_players(game_id)
+	for other_player_id in game_players:
+		if other_player_id != current_player_id:
+			rpc_id(other_player_id, "c_destroy_bubble", bubble_index, bubble_position)
+
+remote func s_destroy_platform(game_id, platform_index):
+	var current_player_id = get_tree().get_rpc_sender_id()
+	var game_players = CoOpStage.get_current_game_players(game_id)
+	for other_player_id in game_players:
+		if other_player_id != current_player_id:
+			rpc_id(other_player_id, "c_destroy_platform", platform_index)
+
+remote func s_coop_game_finished(game_id):
 	CoOpStage.delete_game(game_id)
 
+remote func s_login(username, password):
+	var current_player_id = get_tree().get_rpc_sender_id()
+	var user_list = Database.execute_query_with_args(Database.SELECT_USER_BY_NAME_AND_PASSWORD, [username, password])
+	var user = null
+	if user_list.size() == 1:
+		user = user_list[0]
+		Lobby.player_logedin(current_player_id, username)
+	rpc_id(current_player_id, "c_update_player_info", user)
+
+remote func s_update_player_score(user_id, score):
+	var current_player_id = get_tree().get_rpc_sender_id()
+	Database.execute_query_with_args(Database.UPDATE_USER_SCORE_BY_ID, [score, user_id])
+	var user_list = Database.execute_query_with_args(Database.SELECT_USER_BY_ID, [user_id])
+	var user = null
+	if user_list.size() == 1:
+		user = user_list[0]
+	rpc_id(current_player_id, "c_update_player_info", user)
+
+remote func s_get_all_boosts(requester):
+	var current_player_id = get_tree().get_rpc_sender_id()
+	var boosts_list = Database.execute_query(Database.SELECT_ALL_BOOSTS)
+	rpc_id(current_player_id, "c_get_all_boosts", boosts_list, requester)
+
+remote func s_update_player_info(user_id):
+	var current_player_id = get_tree().get_rpc_sender_id()
+	var user_list = Database.execute_query_with_args(Database.SELECT_USER_BY_ID, [user_id])
+	var user = null
+	if user_list.size() == 1:
+		user = user_list[0]
+	rpc_id(current_player_id, "c_update_player_info", user)
+
+remote func s_update_selected_boost(user_id, selected_boost):
+	var current_player_id = get_tree().get_rpc_sender_id()
+	Database.execute_query_with_args(Database.UPDATE_USER_SELECTED_BOOST, [selected_boost, user_id])
+	var user_list = Database.execute_query_with_args(Database.SELECT_USER_BY_ID, [user_id])
+	var user = null
+	if user_list.size() == 1:
+		user = user_list[0]
+	rpc_id(current_player_id, "c_update_player_info", user)
