@@ -2,7 +2,7 @@ extends Node
 
 
 const SQLite = preload("res://addons/godot-sqlite/bin/gdsqlite.gdns")
-const db_path = "res://database/bubble_war_server.sqlite"
+const db_path = "user://bubble_war_server.sqlite"
 var db = null
 
 ## queries ##
@@ -18,6 +18,11 @@ func _ready():
 
 
 func init_db():
+	var file_to_check = File.new()
+	var do_file_exists = file_to_check.file_exists(db_path)
+	if !do_file_exists:
+		print("DB does not exists. Exiting")
+		get_tree().quit()
 	if db == null:
 		db = SQLite.new()
 		db.path = db_path
